@@ -1,0 +1,22 @@
+# Choreography for the TurtleBot3 dance MVP.
+#
+# Each step holds a body velocity for `duration` seconds, then the robot stops.
+#   linear   forward speed in m/s   (negative = backwards)
+#   angular  yaw rate in rad/s      (positive = counter-clockwise)
+#   repeat   optional, play the step this many times
+# Speeds are clamped to the robot's limits (burger: 0.22 m/s, 2.84 rad/s).
+dance:
+  - {name: step forward,  linear:  0.15, duration: 2.0}
+  - {name: step back,     linear: -0.15, duration: 2.0}
+  - {name: shimmy left,   angular:  1.5, duration: 0.6}
+  - {name: shimmy right,  angular: -1.5, duration: 1.2}
+  - {name: shimmy left,   angular:  1.5, duration: 1.2}
+  - {name: shimmy centre, angular: -1.5, duration: 0.6}
+  - {name: pause,         duration: 0.5}
+  - {name: spin,          angular:  2.0, duration: 3.14}
+  - {name: circle left,   linear: 0.15, angular:  1.0, duration: 6.28}
+  - {name: circle right,  linear: 0.15, angular: -1.0, duration: 6.28}
+  - {name: spin back,     angular: -2.0, duration: 3.14}
+  - {name: bow,           linear:  0.10, duration: 0.5}
+  - {name: rise,          linear: -0.10, duration: 0.5}
+  - {name: finish,        duration: 1.0}

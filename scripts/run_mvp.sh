@@ -6,22 +6,59 @@
 #   scripts/run_mvp.sh fortress        force the Gazebo Fortress stand-in
 #   scripts/run_mvp.sh classic runs:=3 extra arguments go to ros2 launch
 #
-# Expects this repository inside the src/ folder of a colcon workspace.
+# The repository can live anywhere. Set COLCON_WS to use a particular
+# colcon workspace; otherwise an enclosing <workspace>/src tree is detected,
+# or a private workspace is created under ~/.cache/clair_agent_ws.
 set -eo pipefail
 
-repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ws="$(cd "$repo/../.." && pwd)"
-if [[ "$(basename "$(dirname "$repo")")" != "src" ]]; then
-    echo "Clone this repository into <workspace>/src first (see README)." >&2
-    exit 1
+repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+
+build_paths=()
+if [[ -n "${COLCON_WS:-}" ]]; then
+    mkdir -p "$COLCON_WS"
+    ws="$(cd "$COLCON_WS" && pwd -P)"
+
+    # Include the selected workspace's other source packages, if present.
+    if [[ -d "$ws/src" ]]; then
+        build_paths+=("$ws/src")
+    fi
+    # Also include this repository when it is not already under workspace/src.
+    case "$repo/" in
+        "$ws/src/"*) ;;
+        *) build_paths+=("$repo") ;;
+    esac
+else
+    # Walk upward and use the nearest enclosing colcon-style workspace whose
+    # src directory contains this repository.
+    candidate="$repo"
+    ws=""
+    while :; do
+        if [[ -d "$candidate/src" && "$repo/" == "$candidate/src/"* ]]; then
+            ws="$candidate"
+            break
+        fi
+        [[ "$candidate" == "/" ]] && break
+        candidate="$(dirname "$candidate")"
+    done
+
+    if [[ -z "$ws" ]]; then
+        # No enclosing workspace: keep build/install/log outside the repository.
+        ws="${XDG_CACHE_HOME:-$HOME/.cache}/clair_agent_ws"
+        mkdir -p "$ws"
+        build_paths+=("$repo")
+    fi
 fi
 
 source /opt/ros/humble/setup.bash
 [[ -f /usr/share/gazebo/setup.sh ]] && source /usr/share/gazebo/setup.sh
-[[ -f ~/turtlebot3_ws/install/setup.bash ]] && source ~/turtlebot3_ws/install/setup.bash
+[[ -f "$HOME/turtlebot3_ws/install/setup.bash" ]] && source "$HOME/turtlebot3_ws/install/setup.bash"
 
 cd "$ws"
-colcon build --symlink-install --packages-select clair_agent
+if ((${#build_paths[@]})); then
+    colcon build --symlink-install --base-paths "${build_paths[@]}" --packages-select clair_agent
+else
+    colcon build --symlink-install --packages-select clair_agent
+fi
 source install/setup.bash
 
 export TURTLEBOT3_MODEL="${TURTLEBOT3_MODEL:-burger}"

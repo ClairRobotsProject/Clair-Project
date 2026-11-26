@@ -11,19 +11,26 @@ through the architecture, on ROS 2 Humble.
 ## Quick start
 
 ```bash
-# 1. Put the repository in a colcon workspace
-mkdir -p ~/clair_ws/src && cd ~/clair_ws/src
+# 1. Clone the repository anywhere
 git clone https://github.com/ClairRobotsProject/Clair-Project.git
+cd Clair-Project
 
 # 2. Install the TurtleBot3 simulation (once, needs sudo)
-Clair-Project/scripts/install_dependencies.sh
+scripts/install_dependencies.sh
 
 # 3. Build and run the dance
-Clair-Project/scripts/run_mvp.sh
+scripts/run_mvp.sh
 ```
 
 `run_mvp.sh` uses the official TurtleBot3 simulation when `turtlebot3_gazebo` is
 installed and otherwise falls back to Gazebo Fortress (see [Simulators](#simulators)).
+
+It builds with colcon in the first of these that applies, and prints which one it used:
+
+1. the workspace named by the `COLCON_WS` environment variable;
+2. the workspace whose `src/` folder contains the repository, if there is one
+   (your home directory never counts);
+3. a private workspace in `~/.cache/clair_agent_ws`.
 
 ### The same thing by hand
 
@@ -38,8 +45,9 @@ source /opt/ros/humble/setup.bash
 export TURTLEBOT3_MODEL=burger
 ros2 launch turtlebot3_gazebo empty_world.launch.py
 
-# Terminal 2: the Agent
-cd ~/clair_ws && colcon build --symlink-install && source install/setup.bash
+# Terminal 2: the Agent (run from the repository root; build/, install/ and log/
+# are created there and are git-ignored)
+cd Clair-Project && colcon build --symlink-install && source install/setup.bash
 ros2 launch clair_agent dance.launch.py
 ```
 

@@ -7,8 +7,9 @@
 #   scripts/run_mvp.sh classic runs:=3 extra arguments go to ros2 launch
 #
 # The repository can live anywhere. Set COLCON_WS to use a particular
-# colcon workspace; otherwise an enclosing <workspace>/src tree is detected,
-# or a private workspace is created under ~/.cache/clair_agent_ws.
+# colcon workspace; otherwise an enclosing <workspace>/src tree is detected
+# (your home directory is never used as a workspace), or a private workspace
+# is created under ~/.cache/clair_agent_ws.
 set -eo pipefail
 
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
@@ -33,7 +34,7 @@ else
     candidate="$repo"
     ws=""
     while :; do
-        if [[ -d "$candidate/src" && "$repo/" == "$candidate/src/"* ]]; then
+        if [[ -d "$candidate/src" && "$candidate" != "$HOME" && "$repo/" == "$candidate/src/"* ]]; then
             ws="$candidate"
             break
         fi
@@ -53,6 +54,7 @@ source /opt/ros/humble/setup.bash
 [[ -f /usr/share/gazebo/setup.sh ]] && source /usr/share/gazebo/setup.sh
 [[ -f "$HOME/turtlebot3_ws/install/setup.bash" ]] && source "$HOME/turtlebot3_ws/install/setup.bash"
 
+echo "Using colcon workspace: $ws"
 cd "$ws"
 if ((${#build_paths[@]})); then
     colcon build --symlink-install --base-paths "${build_paths[@]}" --packages-select clair_agent

@@ -40,7 +40,7 @@ repos:
         stages: [commit-msg]       # e.g. "Refs #74 CI-1"
       - id: unit-tests
         name: unit tests
-        entry: python3 -m pytest -q clair_agent/test
+        entry: bash -c 'cd clair_agent && python3 -m pytest -q test'   # as in CI: run from clair_agent/
         language: system
         pass_filenames: false
         stages: [pre-push]         # slower; runs before every push

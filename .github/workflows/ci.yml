@@ -52,7 +52,7 @@ jobs:
             case "$REF_NAME" in hotfix/*) base=main ;; esac
             BASE_SHA=$(git rev-parse "origin/$base")
           fi
-          python scripts/check_commit_message.py "$BASE_SHA..$HEAD_SHA"
+          python scripts/check_commit_message.py --range "$BASE_SHA..$HEAD_SHA"
 
   unit-tests:
     name: Unit tests (no ROS needed)

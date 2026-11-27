@@ -152,12 +152,14 @@ Set up the local checks once, from the repository root:
 
 ```bash
 python3 -m pip install -r requirements-dev.txt
-pre-commit install --hook-type pre-commit --hook-type pre-push
+pre-commit install
 ```
 
-Commits then run flake8, shellcheck, YAML and Python syntax checks and the
-architecture layering check ([scripts/check_architecture.py](scripts/check_architecture.py));
-pushes also run the unit tests. Run everything by hand with `pre-commit run --all-files`.
+Commits then run flake8, shellcheck, YAML and Python syntax checks, the
+architecture layering check ([scripts/check_architecture.py](scripts/check_architecture.py)) and require the
+commit message to name a GitHub issue and an easyBacklog story ID, for example
+`Refs #74 CI-1` ([scripts/check_commit_message.py](scripts/check_commit_message.py));
+pushes also run the unit tests. CI applies the same message rule to every commit in a PR. Run everything by hand with `pre-commit run --all-files`.
 
 ## Next
 

@@ -1,6 +1,7 @@
 # Local hook system. Install once with:  pre-commit install
 # Run on everything with:                pre-commit run --all-files
 # CI runs the same hooks, so a green commit here is a green check there.
+default_install_hook_types: [pre-commit, pre-push, commit-msg]
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
@@ -30,6 +31,11 @@ repos:
         language: system
         pass_filenames: false
         files: ^clair_agent/clair_agent/.*\.py$
+      - id: commit-message-refs
+        name: commit message names a GitHub issue and a backlog story
+        entry: python3 scripts/check_commit_message.py
+        language: system
+        stages: [commit-msg]       # e.g. "Refs #74 CI-1"
       - id: unit-tests
         name: unit tests
         entry: python3 -m pytest -q clair_agent/test

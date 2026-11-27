@@ -25,6 +25,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0           # the commit-message check reads the branch history
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'   # the Python of ROS 2 Humble
@@ -38,6 +40,19 @@ jobs:
       # The same hooks developers run locally (flake8, shellcheck, YAML and
       # Python syntax, whitespace, and scripts/check_architecture.py).
       - run: pre-commit run --all-files --show-diff-on-failure
+      # Every commit must name a GitHub issue and an easyBacklog story (e.g. "Refs #74 CI-1").
+      - name: Check commit messages
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ -z "$BASE_SHA" ]; then
+            base=develop
+            case "$REF_NAME" in hotfix/*) base=main ;; esac
+            BASE_SHA=$(git rev-parse "origin/$base")
+          fi
+          python scripts/check_commit_message.py "$BASE_SHA..$HEAD_SHA"
 
   unit-tests:
     name: Unit tests (no ROS needed)

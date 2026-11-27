@@ -141,6 +141,31 @@ The tests drive the Agent with a fake Driver and clock and cover the full
 Policy → Action → Skill → Driver path, velocity clamping, cancellation, repeat
 runs, failure reporting and choreography parsing.
 
+## Development workflow
+
+Work follows GitFlow: branch off `develop` as `feature/<what-you-do>` (or
+`bugfix/<name>`), pull `develop` before merging, and open a pull request back into
+`develop`. Every push and pull request is checked by CI (`.github/workflows/ci.yml`);
+a merge into `main` runs CD (`cd.yml`): it repeats every CI check and then publishes a versioned
+GitHub Release containing a source archive (the version comes from `clair_agent/package.xml`;
+nothing is installed anywhere). If that version is already released, nothing is published and
+the run shows a warning, so bump the version in the release or hotfix branch.
+
+Set up the local checks once, from the repository root:
+
+```bash
+python3 -m pip install -r requirements-dev.txt
+pre-commit install
+```
+
+Commits then run flake8, shellcheck, YAML and Python syntax checks, the
+architecture layering check ([scripts/check_architecture.py](scripts/check_architecture.py)) and require the
+commit message to name a GitHub issue and an easyBacklog story ID, for example
+`Refs #74 CI-1`, or `[B3]` for a backlog story in the theme-letter form
+([scripts/check_commit_message.py](scripts/check_commit_message.py));
+pushes also run the unit tests. CI applies the same message rule to every commit pushed to a work branch or opened in a PR
+into `develop`. Run everything by hand with `pre-commit run --all-files`.
+
 ## Next
 
 The POC (pick and place with a simulated UR arm) adds manipulation Actions, Skills

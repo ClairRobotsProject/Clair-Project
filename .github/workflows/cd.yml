@@ -1,0 +1,54 @@
+# Continuous Deployment: when a validated change is merged into main
+# (release/* and hotfix/* branches merge here), run every CI check again and, if they
+# pass, publish the build as a GitHub Release. "Deploy" here means a versioned GitHub
+# Release holding a source archive of the repository; nothing is installed anywhere.
+# The version comes from package.xml. A version that is already released is not
+# published again: the run shows a warning, so bump <version> in the release or hotfix
+# branch to ship a new one.
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  ci:
+    name: CI checks
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    name: Package and release
+    needs: ci
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: |
+          v=$(python3 -c "import xml.etree.ElementTree as ET; print(ET.parse('clair_agent/package.xml').getroot().findtext('version'))")
+          echo "tag=v$v" >> "$GITHUB_OUTPUT"
+
+      - name: Package
+        run: |
+          git archive --format=tar.gz --prefix=Clair-Project/ \
+            -o "clair_agent-${{ steps.version.outputs.tag }}.tar.gz" HEAD
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            msg="Release $TAG already exists, so nothing was published. Bump <version> in clair_agent/package.xml to ship this change."
+            echo "::warning title=No release published::$msg"
+            echo "### No release published" >> "$GITHUB_STEP_SUMMARY"
+            echo "$msg" >> "$GITHUB_STEP_SUMMARY"
+          else
+            gh release create "$TAG" "clair_agent-$TAG.tar.gz" \
+              --target "$GITHUB_SHA" --title "Clair-Project $TAG" --generate-notes
+          fi

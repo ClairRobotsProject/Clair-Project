@@ -70,34 +70,68 @@ case "${1:-}" in
     classic|fortress) sim="$1"; shift ;;
 esac
 case "$sim" in
-    classic)  launch_file=tb3_dance.launch.py ;;
-    fortress) launch_file=tb3_dance_fortress.launch.py ;;
+    classic)
+        launch_file=tb3_dance.launch.py
+        reset_cmd=(ros2 service call /reset_world std_srvs/srv/Empty) ;;
+    fortress)
+        launch_file=tb3_dance_fortress.launch.py
+        reset_cmd=(ros2 service call /world/dance_floor/set_pose
+                   ros_gz_interfaces/srv/SetEntityPose
+                   "{entity: {name: turtlebot3_burger}, pose: {orientation: {w: 1.0}}}") ;;
 esac
 
-# The simulation's output goes to a log file, not the terminal.
-# CLAIR_LOG_TO_SCREEN=1 scripts/run_mvp.sh shows it in the terminal instead.
-if [[ "${CLAIR_LOG_TO_SCREEN:-0}" == 1 ]]; then
-    exec ros2 launch clair_agent "$launch_file" "$@"
-fi
-
+# Everything the simulation prints goes to a log file, not the terminal.
 log_dir="$repo/logs"
 mkdir -p "$log_dir"
 log="$log_dir/${sim}_$(date +%Y-%m-%d_%H-%M-%S).log"
+: >"$log"
 ln -sfn "$(basename "$log")" "$log_dir/latest.log"
 
-echo "Running the dance in Gazebo ${sim^}."
-echo "Log file: $log"
+echo "Starting Gazebo ${sim^}. Log file: $log"
 echo "Follow it live in another terminal:  tail -f $log_dir/latest.log"
-echo "Press Ctrl+C to stop."
 
-# Ctrl+C still reaches ros2 launch (so it stops the robot and Gazebo); this
-# handler only keeps the script alive long enough to print the summary.
-trap ':' INT
-status=0
-ros2 launch clair_agent "$launch_file" "$@" >"$log" 2>&1 || status=$?
+# Start Gazebo and the bridge, without the Agent, in their own session and
+# process group. Stopping that group later also stops every process Gazebo
+# started, so no Gazebo server is left behind.
+setsid ros2 launch clair_agent "$launch_file" start_agent:=false "$@" >>"$log" 2>&1 &
+sim_pid=$!
 
-echo
-echo "Simulation stopped (exit code $status). Summary:"
-grep -E "dance run|run [0-9]+: |not ready|\[ERROR\]" "$log" \
-    || echo "  no summary lines found; see $log"
-exit "$status"
+stop_simulation() {
+    if kill -0 -- -"$sim_pid" 2>/dev/null; then
+        echo "Closing Gazebo..."
+        kill -TERM -- -"$sim_pid" 2>/dev/null || true
+        for _ in $(seq 20); do
+            kill -0 -- -"$sim_pid" 2>/dev/null || break
+            sleep 0.5
+        done
+        kill -KILL -- -"$sim_pid" 2>/dev/null || true
+    fi
+}
+trap stop_simulation EXIT
+
+# Ctrl+C reaches the running dance (the Agent stops the robot); this handler
+# only records it, so the script can close Gazebo and exit cleanly.
+interrupted=false
+trap 'interrupted=true' INT
+
+dance=0
+while :; do
+    dance=$((dance + 1))
+    if ((dance > 1)); then
+        "${reset_cmd[@]}" >>"$log" 2>&1 \
+            || echo "  could not reset the robot's pose; dancing from where it stopped"
+    fi
+    echo
+    echo "Dance $dance: running (Ctrl+C to stop)..."
+    first_line=$(($(wc -l <"$log") + 1))
+    ros2 launch clair_agent dance.launch.py shutdown_when_done:=true "$@" >>"$log" 2>&1 || true
+    tail -n +"$first_line" "$log" \
+        | grep -E "run [0-9]+: |not ready|\[ERROR\]" \
+        | sed -E 's/.*\]: run [0-9]+: /  result: /; s/.*\]: /  /' \
+        || echo "  no result found; see $log"
+    $interrupted && break
+    read -r -p "Dance again? [y/n] " answer || break
+    $interrupted && break
+    [[ "$answer" =~ ^[Yy] ]] || break
+done
+echo "Stopping. Log file: $log"

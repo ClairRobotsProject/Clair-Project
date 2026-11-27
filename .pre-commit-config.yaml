@@ -2,6 +2,8 @@
 # Run on everything with:                pre-commit run --all-files
 # CI runs the same hooks, so a green commit here is a green check there.
 default_install_hook_types: [pre-commit, pre-push, commit-msg]
+# The license text must stay exactly as published, including its trailing blank line.
+exclude: ^LICENSE$
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0

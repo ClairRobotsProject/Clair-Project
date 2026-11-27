@@ -1,0 +1,6 @@
+# Tools for the tests, linting and the pre-commit hooks (no ROS needed).
+pytest
+pyyaml
+numpy
+flake8
+pre-commit

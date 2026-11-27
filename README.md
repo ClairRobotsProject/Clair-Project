@@ -26,6 +26,7 @@ scripts/run_mvp.sh
 The simulation's output is written to logs/<simulator>_<date>.log (and logs/latest.log), not the terminal. Set CLAIR_LOG_TO_SCREEN=1 to see it in the terminal.
 
 run_mvp.sh runs the Gazebo Fortress stand-in by default. Pass classic to use the official TurtleBot3 simulation instead (needs turtlebot3_gazebo) (see [Simulators](#simulators)).
+After each dance, run_mvp.sh asks whether to dance again. Yes puts the robot back at its start pose and repeats; no closes Gazebo
 
 It builds with colcon in the first of these that applies, and prints which one it used:
 

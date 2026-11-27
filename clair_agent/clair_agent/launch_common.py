@@ -26,6 +26,9 @@ def dance_arguments():
         DeclareLaunchArgument(
             'shutdown_when_done', default_value='false',
             description='Shut the whole launch down when the dance ends'),
+             DeclareLaunchArgument(
+            'start_agent', default_value='true',
+            description='Start the dance Agent; false starts only the simulation'),
     ]
 
 
@@ -33,7 +36,7 @@ def dance_actions(reset_service='', reset_service_type='empty'):
     """The dance Agent node, plus an optional shutdown when it exits."""
     node = Node(
         package='clair_agent', executable='dance_agent', name='dance_agent',
-        output='screen',
+        output='screen',    condition=IfCondition(LaunchConfiguration('start_agent')),
         parameters=[{
             'use_sim_time': True,
             'model': LaunchConfiguration('model'),

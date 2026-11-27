@@ -15,15 +15,15 @@ through the architecture, on ROS 2 Humble.
 git clone https://github.com/ClairRobotsProject/Clair-Project.git
 cd Clair-Project
 
-# 2. Install the TurtleBot3 simulation (once, needs sudo)
+
+# 2. Only for "classic": install the TurtleBot3 simulation (once, needs sudo)
 scripts/install_dependencies.sh
 
 # 3. Build and run the dance
 scripts/run_mvp.sh
 ```
 
-`run_mvp.sh` uses the official TurtleBot3 simulation when `turtlebot3_gazebo` is
-installed and otherwise falls back to Gazebo Fortress (see [Simulators](#simulators)).
+run_mvp.sh runs the Gazebo Fortress stand-in by default. Pass classic to use the official TurtleBot3 simulation instead (needs turtlebot3_gazebo) (see [Simulators](#simulators)).
 
 It builds with colcon in the first of these that applies, and prints which one it used:
 
@@ -54,7 +54,7 @@ ros2 launch clair_agent dance.launch.py
 Or both in one command:
 
 ```bash
-ros2 launch clair_agent tb3_dance.launch.py
+ros2 launch clair_agent tb3_dance_fortress.launch.py
 ```
 
 Press Ctrl-C at any time; the Agent stops the robot before it exits.

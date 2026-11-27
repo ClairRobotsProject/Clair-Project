@@ -6,6 +6,7 @@ name: CI
 on:
   push:
     branches:
+      - develop        # validates develop after every merge and seeds the caches PRs read
       - 'feature/**'
       - 'bugfix/**'
       - 'release/**'
@@ -14,6 +15,10 @@ on:
     branches:
       - develop
       - main
+  workflow_call:       # CD runs these same checks before it publishes a release
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -41,7 +46,10 @@ jobs:
       # Python syntax, whitespace, and scripts/check_architecture.py).
       - run: pre-commit run --all-files --show-diff-on-failure
       # Every commit must name a GitHub issue and an easyBacklog story (e.g. "Refs #74 CI-1").
+      # Skipped for PRs into main (release/hotfix branches, whose commits were checked when
+      # they were pushed, and which also carry older history) and for pushes to develop/main.
       - name: Check commit messages
+        if: github.base_ref != 'main' && github.ref_name != 'develop' && github.ref_name != 'main'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}

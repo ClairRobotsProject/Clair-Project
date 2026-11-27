@@ -141,6 +141,24 @@ The tests drive the Agent with a fake Driver and clock and cover the full
 Policy → Action → Skill → Driver path, velocity clamping, cancellation, repeat
 runs, failure reporting and choreography parsing.
 
+## Development workflow
+
+Work follows GitFlow: branch off `develop` as `feature/<what-you-do>` (or
+`bugfix/<name>`), pull `develop` before merging, and open a pull request back into
+`develop`. Every push and pull request is checked by CI (`.github/workflows/ci.yml`);
+a merge into `main` runs CD (`cd.yml`), which publishes a release.
+
+Set up the local checks once, from the repository root:
+
+```bash
+python3 -m pip install -r requirements-dev.txt
+pre-commit install --hook-type pre-commit --hook-type pre-push
+```
+
+Commits then run flake8, shellcheck, YAML and Python syntax checks and the
+architecture layering check ([scripts/check_architecture.py](scripts/check_architecture.py));
+pushes also run the unit tests. Run everything by hand with `pre-commit run --all-files`.
+
 ## Next
 
 The POC (pick and place with a simulated UR arm) adds manipulation Actions, Skills

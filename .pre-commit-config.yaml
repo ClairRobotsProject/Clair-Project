@@ -1,0 +1,38 @@
+# Local hook system. Install once with:  pre-commit install
+# Run on everything with:                pre-commit run --all-files
+# CI runs the same hooks, so a green commit here is a green check there.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-yaml
+      - id: check-ast              # Python syntax check
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8                 # lint
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck             # shell syntax check and lint
+        args: [--exclude=SC1091]   # sourced ROS setup files are not in the repo
+  - repo: local
+    hooks:
+      - id: architecture
+        name: architecture layering check
+        entry: python3 scripts/check_architecture.py
+        language: system
+        pass_filenames: false
+        files: ^clair_agent/clair_agent/.*\.py$
+      - id: unit-tests
+        name: unit tests
+        entry: python3 -m pytest -q clair_agent/test
+        language: system
+        pass_filenames: false
+        stages: [pre-push]         # slower; runs before every push

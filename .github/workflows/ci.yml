@@ -1,0 +1,64 @@
+# Continuous Integration: validate every change before it is merged.
+# Runs on pushes to GitFlow work branches and on pull requests into
+# develop and main (the long-lived branches).
+name: CI
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'bugfix/**'
+      - 'release/**'
+      - 'hotfix/**'
+  pull_request:
+    branches:
+      - develop
+      - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Unit tests (no ROS needed)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'   # the Python of ROS 2 Humble
+      - run: python -m pip install pytest pyyaml numpy
+      - run: python -m pytest test -v
+        working-directory: clair_agent
+
+  build:
+    name: Build clair_agent on ROS 2 Humble
+    runs-on: ubuntu-22.04
+    container: ros:humble
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src/Clair-Project
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y python3-colcon-common-extensions python3-pytest
+          rosdep update --rosdistro humble
+          rosdep install --from-paths src --ignore-src -y --rosdistro humble
+      - name: Build
+        run: |
+          . /opt/ros/humble/setup.sh
+          colcon build --packages-select clair_agent
+      - name: Test
+        run: |
+          . /opt/ros/humble/setup.sh
+          colcon test --packages-select clair_agent --return-code-on-test-failure
+          colcon test-result --verbose
+
+  scripts:
+    name: Shell scripts parse
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: for f in scripts/*.sh; do bash -n "$f"; done

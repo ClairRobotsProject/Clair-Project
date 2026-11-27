@@ -1,0 +1,50 @@
+# Continuous Deployment: when a validated change is merged into main
+# (release/* and hotfix/* branches merge here), re-validate it and publish
+# the build as a GitHub Release. The version comes from package.xml; a
+# version that is already released is skipped, so bump it in the release
+# branch to publish a new one.
+name: CD
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    name: Test, package and release
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - run: python -m pip install pytest pyyaml numpy
+      - run: python -m pytest test -v
+        working-directory: clair_agent
+
+      - name: Read version
+        id: version
+        run: |
+          v=$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' clair_agent/package.xml | head -n1)
+          echo "tag=v$v" >> "$GITHUB_OUTPUT"
+
+      - name: Package
+        run: |
+          git archive --format=tar.gz --prefix=Clair-Project/ \
+            -o "clair_agent-${{ steps.version.outputs.tag }}.tar.gz" HEAD
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ steps.version.outputs.tag }}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists; bump <version> in package.xml to publish a new one."
+          else
+            gh release create "$tag" "clair_agent-$tag.tar.gz" \
+              --target "$GITHUB_SHA" --title "Clair-Project $tag" --generate-notes
+          fi

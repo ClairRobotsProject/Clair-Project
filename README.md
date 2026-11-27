@@ -148,6 +148,7 @@ and an arm Driver on the same core classes. It is not started.
 
 ## License
 
-Copyright 2026 AbstractRobot team. Licensed under the
-[Apache License, Version 2.0](LICENSE); see [NOTICE](NOTICE). Redistributions must
-include the license text and keep the notices, and say so when a file is changed.
+Copyright 2026 The Clair Project (AbstractRobot) Authors. Licensed under the
+[Apache License, Version 2.0](LICENSE); see [NOTICE](NOTICE). Redistributions must include a
+copy of the license, keep copyright and attribution notices (including the contents of NOTICE),
+and mark files you changed.

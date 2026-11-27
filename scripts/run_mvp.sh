@@ -70,6 +70,34 @@ case "${1:-}" in
     classic|fortress) sim="$1"; shift ;;
 esac
 case "$sim" in
-    classic)  exec ros2 launch clair_agent tb3_dance.launch.py "$@" ;;
-    fortress) exec ros2 launch clair_agent tb3_dance_fortress.launch.py "$@" ;;
+    classic)  launch_file=tb3_dance.launch.py ;;
+    fortress) launch_file=tb3_dance_fortress.launch.py ;;
 esac
+
+# The simulation's output goes to a log file, not the terminal.
+# CLAIR_LOG_TO_SCREEN=1 scripts/run_mvp.sh shows it in the terminal instead.
+if [[ "${CLAIR_LOG_TO_SCREEN:-0}" == 1 ]]; then
+    exec ros2 launch clair_agent "$launch_file" "$@"
+fi
+
+log_dir="$repo/logs"
+mkdir -p "$log_dir"
+log="$log_dir/${sim}_$(date +%Y-%m-%d_%H-%M-%S).log"
+ln -sfn "$(basename "$log")" "$log_dir/latest.log"
+
+echo "Running the dance in Gazebo ${sim^}."
+echo "Log file: $log"
+echo "Follow it live in another terminal:  tail -f $log_dir/latest.log"
+echo "Press Ctrl+C to stop."
+
+# Ctrl+C still reaches ros2 launch (so it stops the robot and Gazebo); this
+# handler only keeps the script alive long enough to print the summary.
+trap ':' INT
+status=0
+ros2 launch clair_agent "$launch_file" "$@" >"$log" 2>&1 || status=$?
+
+echo
+echo "Simulation stopped (exit code $status). Summary:"
+grep -E "dance run|run [0-9]+: |not ready|\[ERROR\]" "$log" \
+    || echo "  no summary lines found; see $log"
+exit "$status"

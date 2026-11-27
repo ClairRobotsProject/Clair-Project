@@ -26,7 +26,7 @@ def dance_arguments():
         DeclareLaunchArgument(
             'shutdown_when_done', default_value='false',
             description='Shut the whole launch down when the dance ends'),
-             DeclareLaunchArgument(
+        DeclareLaunchArgument(
             'start_agent', default_value='true',
             description='Start the dance Agent; false starts only the simulation'),
     ]

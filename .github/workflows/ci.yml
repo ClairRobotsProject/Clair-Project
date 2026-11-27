@@ -1,0 +1,112 @@
+# Continuous Integration: validate every change before it is merged.
+# Runs on pushes to GitFlow work branches and on pull requests into
+# develop and main (the long-lived branches).
+name: CI
+
+on:
+  push:
+    branches:
+      - develop        # validates develop after every merge and seeds the caches PRs read
+      - 'feature/**'
+      - 'bugfix/**'
+      - 'release/**'
+      - 'hotfix/**'
+  pull_request:
+    branches:
+      - develop
+      - main
+  workflow_call:       # CD runs these same checks before it publishes a release
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint, syntax and architecture checks
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0           # the commit-message check reads the branch history
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'   # the Python of ROS 2 Humble
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: python -m pip install -r requirements-dev.txt
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
+      # The same hooks developers run locally (flake8, shellcheck, YAML and
+      # Python syntax, whitespace, and scripts/check_architecture.py).
+      - run: pre-commit run --all-files --show-diff-on-failure
+      # Every commit must name a GitHub issue and an easyBacklog story (e.g. "Refs #74 CI-1").
+      # Skipped for PRs into main (release/hotfix branches, whose commits were checked when
+      # they were pushed, and which also carry older history) and for pushes to develop/main.
+      - name: Check commit messages
+        if: github.base_ref != 'main' && github.ref_name != 'develop' && github.ref_name != 'main'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ -z "$BASE_SHA" ]; then
+            base=develop
+            case "$REF_NAME" in hotfix/*) base=main ;; esac
+            BASE_SHA=$(git rev-parse "origin/$base")
+          fi
+          python scripts/check_commit_message.py --range "$BASE_SHA..$HEAD_SHA"
+
+  unit-tests:
+    name: Unit tests (no ROS needed)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pytest test -v
+        working-directory: clair_agent
+
+  build:
+    name: Build clair_agent on ROS 2 Humble
+    runs-on: ubuntu-22.04
+    container: ros:humble
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: src/Clair-Project
+      # Keep downloaded .deb files (the image deletes them) and cache them, so
+      # the ROS and Gazebo packages are not downloaded on every run. The key
+      # changes only when the package's dependencies do.
+      - name: Keep apt downloads
+        run: rm -f /etc/apt/apt.conf.d/docker-clean
+      - name: Cache ROS packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: apt-humble-${{ hashFiles('src/Clair-Project/clair_agent/package.xml') }}
+          restore-keys: apt-humble-
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y python3-colcon-common-extensions python3-pytest
+          rosdep update --rosdistro humble
+          rosdep install --from-paths src --ignore-src -y --rosdistro humble
+      - name: Build
+        run: |
+          . /opt/ros/humble/setup.sh
+          colcon build --packages-select clair_agent
+      - name: Test
+        run: |
+          . /opt/ros/humble/setup.sh
+          colcon test --packages-select clair_agent --return-code-on-test-failure
+          colcon test-result --verbose

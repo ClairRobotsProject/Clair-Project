@@ -23,6 +23,7 @@ scripts/install_dependencies.sh
 # 3. Build and run the dance
 scripts/run_mvp.sh
 ```
+The simulation's output is written to logs/<simulator>_<date>.log (and logs/latest.log), not the terminal. Set CLAIR_LOG_TO_SCREEN=1 to see it in the terminal.
 
 run_mvp.sh runs the Gazebo Fortress stand-in by default. Pass classic to use the official TurtleBot3 simulation instead (needs turtlebot3_gazebo) (see [Simulators](#simulators)).
 

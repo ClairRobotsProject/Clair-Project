@@ -65,13 +65,12 @@ source install/setup.bash
 
 export TURTLEBOT3_MODEL="${TURTLEBOT3_MODEL:-burger}"
 
-sim="${1:-auto}"
-[[ $# -gt 0 ]] && shift
-if [[ "$sim" == "auto" ]]; then
-    if ros2 pkg prefix turtlebot3_gazebo >/dev/null 2>&1; then sim=classic; else sim=fortress; fi
-fi
+# Gazebo Fortress is the default; pass "classic" for the official TurtleBot3 simulation.
+sim=fortress
+case "${1:-}" in
+    classic|fortress) sim="$1"; shift ;;
+esac
 case "$sim" in
     classic)  exec ros2 launch clair_agent tb3_dance.launch.py "$@" ;;
     fortress) exec ros2 launch clair_agent tb3_dance_fortress.launch.py "$@" ;;
-    *) echo "unknown simulator '$sim' (use classic or fortress)" >&2; exit 1 ;;
 esac

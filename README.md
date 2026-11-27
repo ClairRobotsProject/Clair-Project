@@ -170,3 +170,10 @@ into `develop`. Run everything by hand with `pre-commit run --all-files`.
 
 The POC (pick and place with a simulated UR arm) adds manipulation Actions, Skills
 and an arm Driver on the same core classes. It is not started.
+
+## License
+
+Copyright 2026 The Clair Project (AbstractRobot) Authors. Licensed under the
+[Apache License, Version 2.0](LICENSE); see [NOTICE](NOTICE). Redistributions must include a
+copy of the license, keep copyright and attribution notices (including the contents of NOTICE),
+and mark files you changed.

@@ -4,8 +4,8 @@
   <name>clair_agent</name>
   <version>0.1.0</version>
   <description>Modular robot agent architecture (Agent, Policy, Skill, Driver, Sensor) with a TurtleBot3 dance MVP.</description>
-  <maintainer email="clair@example.com">Clair Robots Project</maintainer>
-  <license>TODO: License declaration</license>
+  <maintainer email="clairrobots@gmail.com">Clair Robots Project</maintainer>
+  <license>Apache-2.0</license>
 
   <exec_depend>rclpy</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>

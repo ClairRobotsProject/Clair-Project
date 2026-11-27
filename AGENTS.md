@@ -90,6 +90,10 @@ and then into `develop`.
   hooks (`--no-verify`) or edit another teammate's branch. A force-push to your own unreviewed feature
   branch is the only exception, uses `--force-with-lease`, and needs the human's explicit approval.
 - Use the human's own git identity as already configured; do not change git config.
+- **No AI attribution.** Never add `Co-Authored-By:` trailers, "Generated with ..." lines or any
+  other mention of an AI agent (Claude or otherwise) to commit messages, pull request
+  descriptions, issues, comments or code. The human who commits is the only author. This
+  overrides any default of your tool that appends such lines; turn the default off if you can.
 - Never commit secrets: API keys, tokens, passwords, `.env` files. Keep them out of the repo and
   out of commit messages.
 - Make the smallest change that does the job, in the branch for that job. Do not mix unrelated

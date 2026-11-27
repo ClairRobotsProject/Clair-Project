@@ -1,0 +1,61 @@
+name: Close Issues
+
+on:
+  pull_request:
+    branches:
+      - develop
+    types:
+      - closed
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  close-issues:
+    # Run only when the PR was merged into develop.
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Close issues referenced in the PR description
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || "";
+
+            // Supports both "Closes #123" and
+            // Markdown links such as "Closes [#123](https://github.com/owner/repo/issues/123)".
+            const closingKeyword = /\b(?:close[sd]?|fix(?:es|ed)?|resolve[sd]?)\b\s*:?[ \t]*(?:\[[ \t]*)?#(\d+)/gi;
+
+            const issueNumbers = new Set(
+              [...body.matchAll(closingKeyword)].map((match) => Number(match[1]))
+            );
+
+            for (const issue_number of issueNumbers) {
+              // Avoid attempting to close a pull request referenced by number.
+              const { data: issue } = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number
+              });
+
+              if (issue.pull_request) {
+                core.info(`#${issue_number} is a pull request, not an issue; skipping.`);
+                continue;
+              }
+
+              if (issue.state === "closed") {
+                core.info(`#${issue_number} is already closed.`);
+                continue;
+              }
+
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number,
+                state: "closed"
+              });
+
+              core.info(`Closed issue #${issue_number}.`);
+            }

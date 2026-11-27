@@ -16,7 +16,8 @@ git clone https://github.com/ClairRobotsProject/Clair-Project.git
 cd Clair-Project
 
 
-# 2. Only for "classic": install the TurtleBot3 simulation (once, needs sudo)
+# 2. Install the dependencies (once; Gazebo Fortress by default, add "classic"
+#    for the official TurtleBot3 simulation)
 scripts/install_dependencies.sh
 
 # 3. Build and run the dance

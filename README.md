@@ -145,3 +145,9 @@ runs, failure reporting and choreography parsing.
 
 The POC (pick and place with a simulated UR arm) adds manipulation Actions, Skills
 and an arm Driver on the same core classes. It is not started.
+
+## License
+
+Copyright 2026 AbstractRobot team. Licensed under the
+[Apache License, Version 2.0](LICENSE); see [NOTICE](NOTICE). Redistributions must
+include the license text and keep the notices, and say so when a file is changed.

@@ -20,7 +20,7 @@ setup(
     maintainer='Clair Robots Project',
     maintainer_email='clair@example.com',
     description='Modular robot agent architecture with a TurtleBot3 dance MVP.',
-    license='TODO: License declaration',
+    license='Apache-2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [

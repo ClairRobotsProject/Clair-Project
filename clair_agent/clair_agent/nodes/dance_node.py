@@ -11,7 +11,6 @@ from ament_index_python.packages import get_package_share_directory
 from rclpy.executors import ExternalShutdownException, SingleThreadedExecutor
 from rclpy.node import Node
 from rclpy.signals import SignalHandlerOptions
-from ros_gz_interfaces.srv import SetEntityPose
 from std_srvs.srv import Empty
 
 from clair_agent.core import Agent, ExecutionStatus
@@ -94,6 +93,8 @@ class DanceNode(Node):
         if not self.reset_service:
             return True
         if self.reset_service_type == 'set_entity_pose':
+            # Imported here so the Gazebo Classic path does not need ros_gz.
+            from ros_gz_interfaces.srv import SetEntityPose
             client = self.create_client(SetEntityPose, self.reset_service)
             request = SetEntityPose.Request()
             request.entity.name = self.reset_entity

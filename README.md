@@ -15,7 +15,8 @@ through the architecture, on ROS 2 Humble.
 git clone https://github.com/ClairRobotsProject/Clair-Project.git
 cd Clair-Project
 
-# 2. Install the TurtleBot3 simulation (once, needs sudo)
+
+# 2. Only for "classic": install the TurtleBot3 simulation (once, needs sudo)
 scripts/install_dependencies.sh
 
 # 3. Build and run the dance

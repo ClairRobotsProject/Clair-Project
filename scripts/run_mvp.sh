@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # Build the workspace and run the TurtleBot3 dance MVP.
 #
-#   scripts/run_mvp.sh                 official TurtleBot3 simulation if installed,
-#                                      otherwise the Gazebo Fortress stand-in
-#   scripts/run_mvp.sh fortress        force the Gazebo Fortress stand-in
-#   scripts/run_mvp.sh classic runs:=3 extra arguments go to ros2 launch
+#   scripts/run_mvp.sh                 Gazebo Fortress stand-in (default)
+#   scripts/run_mvp.sh classic         official TurtleBot3 simulation (Gazebo Classic)
+#   scripts/run_mvp.sh runs:=3         extra arguments go to ros2 launch
 #
 # The repository can live anywhere. Set COLCON_WS to use a particular
 # colcon workspace; otherwise an enclosing <workspace>/src tree is detected

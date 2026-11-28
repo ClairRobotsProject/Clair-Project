@@ -23,13 +23,16 @@ def generate_launch_description():
         get_package_share_directory('clair_agent'), 'worlds', f'{WORLD}.sdf')
     set_pose = f'/world/{WORLD}/set_pose'
     headless = LaunchConfiguration('headless')
+    gui_config = os.path.join(
+        get_package_share_directory('clair_agent'), 'config', 'gui.config')
 
     return LaunchDescription(dance_arguments() + [
         DeclareLaunchArgument(
             'headless', default_value='false',
             description='Run the simulation server without the Gazebo window'),
         ExecuteProcess(
-            cmd=['ign', 'gazebo', '-r', world], output='screen',
+            cmd=['ign', 'gazebo', '-r', '--gui-config', gui_config, world],
+            output='screen',
             condition=UnlessCondition(headless)),
         ExecuteProcess(
             cmd=['ign', 'gazebo', '-r', '-s', world], output='screen',

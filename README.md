@@ -88,6 +88,8 @@ ROBOTIS model.
 In Fortress the between-runs reset moves the robot back to the origin but does not
 zero its wheel odometry, so logged poses keep accumulating across runs.
 
+The Fortress window opens with a close-up camera on the robot. To change the view, edit `<camera_pose>` in `clair_agent/config/gui.config` (x y z roll pitch yaw).
+
 ## How the dance maps onto the architecture
 
 ```
